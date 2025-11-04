@@ -1,2 +1,9 @@
 baixador_teste.py
 videovenv/
+ffmpeg/
+icon/
+dist/
+build/
+*.exe
+*.ico
+*.spec

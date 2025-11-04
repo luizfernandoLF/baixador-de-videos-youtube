@@ -5,12 +5,25 @@ from tkinter import font
 from tkinter import messagebox
 import webbrowser
 import threading
+import sys #necessário pra incluir o ffmpeg, é importante pro programa poder funcionar
 # Usamos threads para executar downloads em segundo plano sem bloquear a GUI.
 # O Tkinter processa eventos (cliques, redraws) na thread principal; se um
 # download rodar nessa mesma thread a janela ficará 'congelada' e o sistema
 # pode marcar o programa como "Não está respondendo". Por isso iniciamos
 # operações de I/O longas em threads separadas e usamos `after()` para
 # atualizar widgets com segurança a partir da thread principal.
+
+def get_ffmpeg_path():
+    """Retorna o caminho para o FFmpeg, seja em modo script ou 'congelado'."""
+    if getattr(sys, 'frozen', False):
+        # Estamos rodando como um .exe (congelado)
+        # O PyInstaller coloca os arquivos na pasta sys._MEIPASS
+        return sys._MEIPASS
+    else:
+        # Estamos rodando como script .py
+        # Presume que ffmpeg.exe está na mesma pasta do script
+        return os.path.dirname(os.path.abspath(__file__))
+
 
 def btn_baixar_video_audio():
     janela_baixar_video_audio = tk.Toplevel(janela_principal)
@@ -66,9 +79,11 @@ def btn_baixar_video_audio():
                 # - 'format' define a qualidade/fluxo a ser baixado
                 # - 'outtmpl' informa o caminho/arquivo de saída (usa o outtmpl
                 #    construído a partir do entry_path do usuário)
+                ffmpeg_dir = get_ffmpeg_path()
                 options = {
                     'format': 'bestvideo+bestaudio/best',  # Baixa vídeo na melhor qualidade disponível
-                    'outtmpl': outtmpl
+                    'outtmpl': outtmpl,
+                    'ffmpeg_dir': ffmpeg_dir
                 }
                 # Abre o gerenciador do yt_dlp e executa o download. Esta
                 # chamada faz I/O e pode demorar bastante, por isso está
@@ -136,9 +151,11 @@ def baixar_audio():
                 # converter/extrair para MP3 com o FFmpeg (postprocessor).
                 # Usamos `outtmpl` criado a partir do `entry_path` para garantir
                 # que o arquivo final seja salvo na pasta escolhida pelo usuário.
+                ffmpeg_dir = get_ffmpeg_path()
                 options = {
                     'format': 'bestaudio/best',
                     'outtmpl': outtmpl,
+                    'ffmpeg_location': ffmpeg_dir,
                     'postprocessors': [{
                         'key': 'FFmpegExtractAudio',
                         'preferredcodec': 'mp3',
